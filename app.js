@@ -5,6 +5,7 @@ const { PrismaSessionStore } = require("@quixo3/prisma-session-store");
 const passport = require("passport");
 const multer = require("multer");
 const fs = require("fs");
+const cloudinary = require("./config/cloudinary");
 const path = require("path");
 
 const prisma = new PrismaClient();
@@ -85,6 +86,11 @@ app.post("/folders/delete", async (req, res) => {
     const files = await prisma.file.findMany({
       where: { folderId },
     });
+
+    for (const file of files) {
+      const publicId = path.basename(file.path, path.extname(file.path));
+      await cloudinary.uploader.destroy(publicId);
+    }
     await prisma.file.deleteMany({
       where: { folderId },
     });
@@ -104,16 +110,33 @@ app.post("/folders/delete", async (req, res) => {
 app.post("/upload", upload.single("file"), async (req, res) => {
   if (req.isAuthenticated()) {
     const { originalname, filename, size, mimetype } = req.file;
-    await prisma.file.create({
-      data: {
-        name: originalname,
-        path: path.join(__dirname, "uploads", filename),
-        size,
-        type: mimetype,
-        folderId: parseInt(req.body.folderId),
-      },
-    });
-    res.redirect("/dashboard");
+    const fullPath = path.join(__dirname, "uploads", filename);
+
+    try {
+      const result = await cloudinary.uploader.upload(fullPath, {
+        resource_type: "auto",
+      });
+
+      const fileUrl = result.secure_url;
+
+      await prisma.file.create({
+        data: {
+          name: originalname,
+          path: fileUrl,
+          size,
+          type: mimetype,
+          folderId: parseInt(req.body.folderId, 10),
+        },
+      });
+
+      // Delete the local file after upload
+      //   fs.unlinkSync(fullPath);
+
+      res.redirect("/dashboard");
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      res.status(500).send("Error uploading file");
+    }
   } else {
     res.redirect("/login");
   }
@@ -138,7 +161,12 @@ app.get("/files/download/:id", async (req, res) => {
       where: { id: parseInt(req.params.id) },
     });
     // const filePath = path.join(__dirname, "uploads", file.path);
-    res.download(file.path, file.name);
+    if (file) {
+      // Redirect to the Cloudinary file URL
+      res.redirect(file.path);
+    } else {
+      res.status(404).send("File not found");
+    }
   } else {
     res.redirect("/login");
   }
