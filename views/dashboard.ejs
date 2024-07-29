@@ -4,48 +4,45 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-      }
-      .container {
-        max-width: 800px;
-        margin: auto;
-        padding: 20px;
-      }
-      .folder-list,
-      .file-list {
-        margin: 20px 0;
-      }
-      .folder,
-      .file {
-        margin: 5px 0;
-      }
-    </style>
+    <link href="../src/output.css" rel="stylesheet" />
   </head>
-  <body>
-    <div class="container">
-      <h1>Dashboard</h1>
+  <body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-6">
+      <h1 class="text-3xl font-bold mb-4">Dashboard</h1>
 
-      <h2>Create Folder</h2>
-      <form action="/folders" method="post">
-        <input type="text" name="name" placeholder="Folder Name" required />
-        <button type="submit">Create Folder</button>
+      <h2 class="text-xl font-semibold mb-2">Create Folder</h2>
+      <form action="/folders" method="post" class="mb-6">
+        <input
+          type="text"
+          name="name"
+          placeholder="Folder Name"
+          required
+          class="p-2 border border-gray-300 rounded mr-2"
+        />
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">
+          Create Folder
+        </button>
       </form>
 
-      <h2>Folders</h2>
-      <div class="folder-list">
+      <h2 class="text-xl font-semibold mb-2">Folders</h2>
+      <div class="folder-list mb-6">
         <% folders.forEach(folder => { %>
-        <div class="folder">
-          <span><%= folder.name %></span>
+        <div class="folder bg-white p-4 rounded shadow mb-4">
+          <span class="text-lg font-medium"><%= folder.name %></span>
           <form action="/folders/delete" method="post" style="display: inline">
             <input type="hidden" name="folderId" value="<%= folder.id %>" />
-            <button type="submit">Delete</button>
+            <button type="submit" class="text-red-500 hover:text-red-700 ml-2">
+              Delete
+            </button>
           </form>
-          <ul>
+          <ul class="mt-2">
             <% folder.files.forEach(file => { %>
             <li>
-              <a href="/files/<%= file.id %>"><%= file.name %></a>
+              <a
+                href="/files/<%= file.id %>"
+                class="text-blue-500 hover:underline"
+                ><%= file.name %></a
+              >
             </li>
             <% }) %>
           </ul>
@@ -53,15 +50,31 @@
         <% }) %>
       </div>
 
-      <h2>Upload File</h2>
-      <form action="/upload" method="post" enctype="multipart/form-data">
-        <select name="folderId" required>
+      <h2 class="text-xl font-semibold mb-2">Upload File</h2>
+      <form
+        action="/upload"
+        method="post"
+        enctype="multipart/form-data"
+        class="bg-white p-4 rounded shadow"
+      >
+        <select
+          name="folderId"
+          required
+          class="p-2 border border-gray-300 rounded mb-4"
+        >
           <% folders.forEach(folder => { %>
           <option value="<%= folder.id %>"><%= folder.name %></option>
           <% }) %>
         </select>
-        <input type="file" name="file" required />
-        <button type="submit">Upload File</button>
+        <input
+          type="file"
+          name="file"
+          required
+          class="p-2 mb-4 border border-gray-300 rounded"
+        />
+        <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded">
+          Upload File
+        </button>
       </form>
     </div>
   </body>
